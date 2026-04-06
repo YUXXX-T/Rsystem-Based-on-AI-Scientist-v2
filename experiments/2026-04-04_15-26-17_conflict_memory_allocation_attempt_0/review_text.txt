@@ -1,0 +1,46 @@
+{
+    "Summary": "This paper studies a lightweight feedback mechanism for decoupled multi-agent scheduling called Conflict Memory Allocation (CMA). After a downstream path planner resolves conflicts, observed conflicts are projected onto a spatial grid and accumulated via an exponential moving average. This learned conflict memory is then used as an additive soft penalty on surrogate single-agent routes during future task allocation. The paper is framed as a negative-result study: the authors report that the learned memory map becomes sparse and structured, with persistent hotspots aligned with bottlenecks, but that this learned signal yields little downstream benefit in the retained evaluation artifact. The main reported quantitative anchors are a best penalty weight of 0.5 and a labeled final improvement of only 0.0123, alongside a per-instance plot showing mostly near-zero improvement ratios and one substantial negative outlier.",
+    "Strengths": [
+        "The paper addresses a real systems issue: decoupled allocation/planning pipelines are practical but often blind to congestion.",
+        "The proposed CMA mechanism is simple, lightweight, and interpretable; it is easy to understand how the memory is formed and how it affects assignment costs.",
+        "The authors are commendably cautious and transparent about the limitations of the retained artifact, and they avoid overstating the conclusions.",
+        "As a negative-result framing, the paper highlights a potentially useful lesson: learning descriptive spatial conflict structure is easier than turning it into an optimization signal that reliably improves downstream scheduling."
+    ],
+    "Weaknesses": [
+        "The submission is scientifically incomplete. Key experimental details are missing or explicitly unrecoverable, including the benchmark/environment identity, seed count, forgetting factor beta, exact improvement-ratio formula, and aggregate statistics.",
+        "The evaluation is far too weak for the paper's claims. Most empirical conclusions rely on one heatmap, one per-instance plot, and two scalar values extracted from logs, with no confidence intervals, significance tests, or multi-seed analysis.",
+        "Because the underlying artifact is incomplete, it is impossible to tell whether the observed near-zero gains are a robust failure mode of CMA or simply a consequence of a particular environment, poor hyperparameter scaling, or a weak implementation choice.",
+        "The method itself is modestly novel at best: an EMA conflict histogram used for additive cost shaping along surrogate paths is a fairly straightforward heuristic.",
+        "Related work is severely underdeveloped. The paper barely cites relevant literature on multi-agent path finding, task allocation, congestion-aware scheduling/routing, cost shaping, or negative results in planning/learning systems.",
+        "There are no comparisons to simpler alternatives such as static bottleneck heuristics, occupancy-based priors, hand-designed congestion penalties, or direct congestion estimates that do not require learning over time.",
+        "The paper's central interpretation about a spatial-vs-spatiotemporal mismatch is plausible, but it is not rigorously demonstrated by the reported evidence.",
+        "The submission reads more like a careful artifact postmortem than a complete workshop paper with reproducible methodology and actionable empirical conclusions."
+    ],
+    "Originality": 2,
+    "Quality": 1,
+    "Clarity": 2,
+    "Significance": 1,
+    "Questions": [
+        "Can the authors provide the original experimental setup in enough detail to reproduce the study: benchmark/environment, allocator, planner, task distribution, exact metric definitions, seed count, and the memory decay parameter beta?",
+        "What is the exact definition of the reported 'improvement ratio'? Without this, it is difficult to interpret the scale of the near-zero values or the negative outlier.",
+        "Was the reported best setting (lambda = 0.5, final improvement = 0.0123) obtained from one run or aggregated across multiple runs? If multiple runs existed originally, can the authors recover any variance estimates?",
+        "How often did the added memory penalty actually change the assignment ranking relative to the baseline allocator? If rankings rarely changed, that would directly support the proposed interface-mismatch explanation.",
+        "Can the authors compare CMA against simpler non-learned baselines, e.g., a static hand-crafted bottleneck map or a recent-window conflict count, to show whether the learned memory itself adds value?",
+        "Is the observed hotspot structure stable across environments or seeds, or could it simply reflect unavoidable geometry in a single map?",
+        "Can the authors provide a sensitivity analysis over lambda and beta, or at least explain whether the weak gains might be due to poor scaling between the base assignment cost and the congestion penalty?"
+    ],
+    "Limitations": [
+        "The authors do acknowledge the major methodological limitation: the retained artifact is incomplete and prevents strong statistical claims. This honesty is appreciated.",
+        "However, the discussion should more explicitly state that the current evidence is insufficient to support any general conclusion beyond a narrow artifact-level observation.",
+        "A key practical limitation is distribution shift: a learned hotspot map may encode environment-specific bottlenecks and fail when task distributions or layouts change.",
+        "Another limitation is that spatial memory ignores timing, so using it in real robotic systems could reroute agents toward new bottlenecks or increase delays elsewhere.",
+        "If such a method were deployed in warehouses or traffic-like systems, incorrect congestion priors could degrade throughput or safety margins. This deserves a brief explicit discussion, even if the work is low-risk overall."
+    ],
+    "Ethical Concerns": false,
+    "Soundness": 1,
+    "Presentation": 2,
+    "Contribution": 1,
+    "Overall": 3,
+    "Confidence": 4,
+    "Decision": "Reject"
+}

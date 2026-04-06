@@ -1,0 +1,46 @@
+{
+    "Summary": "This paper studies whether a lightweight learned congestion signal can improve decoupled multi-agent scheduling. The proposed prototype, Conflict Memory Allocation (CMA), trains a small CNN on two-channel occupancy grids (agent occupancy and active-task occupancy) to predict a short-horizon congestion map. At decision time, the predicted congestion accumulated along an estimated path is added as a penalty to a greedy distance-based assignment cost. Experiments on three synthetic 20x20 warehouse layouts with varying agent counts show mixed results: the best checkpoint yields an average throughput gain of about 7.1% over the standard decoupled baseline, mainly in bottlenecked or dense-obstacle layouts at medium load, while sparse or low-load cases often show little gain or degradation. The paper emphasizes a negative-result-style conclusion: predictor validation loss is misaligned with downstream scheduling utility, since the lowest-loss checkpoint is not the one with the best end-task performance.",
+    "Strengths": [
+        "The paper is clear and unusually transparent about what is and is not implemented. The claims are modest and generally consistent with the reported results.",
+        "The central observation that surrogate predictor quality can be poorly aligned with downstream control utility is potentially useful, especially for learned components embedded inside planning pipelines.",
+        "The paper studies both throughput and a congestion proxy, and the qualitative pattern across layouts is informative: benefits appear mostly in structured bottlenecked regimes rather than uniformly.",
+        "As a pilot study, the setup is simple enough that the failure modes are easy to understand."
+    ],
+    "Weaknesses": [
+        "The paper does not realize its stated core idea. The title and motivation are about learning from MAPF conflict logs / conflict memory, but the implemented method only predicts an occupancy-based congestion proxy from current occupancy grids. This substantially weakens the claimed contribution.",
+        "Related work is far too thin. The submission does not seriously engage with prior literature on MAPF, multi-robot task allocation, decoupled assignment/planning, congestion-aware assignment, or learned traffic prediction for planning. Citing essentially only a deep learning textbook is not adequate contextualization.",
+        "The evaluation is weak. The paper compares only against a very simple greedy distance-based decoupled baseline, with no stronger non-learned congestion-aware heuristics, no oracle congestion map, no alternative assignment solver, and no coupled/joint MAPF-style baseline even on small instances.",
+        "Model selection appears problematic. The final 30-epoch checkpoint is chosen by downstream throughput aggregated over the same 12 layout/load configurations used for reporting. Unless there is a separate held-out tuning distribution, this is effectively tuning on the evaluation setup and likely inflates the reported gain.",
+        "The negative finding about validation loss versus downstream utility may be partly an artifact of the self-induced evaluation design: validation is dense-only while deployment averages sparse, bottleneck, and dense layouts. This makes the misalignment less surprising than the paper suggests.",
+        "Experimental support is limited: only 5 evaluation episodes per point, no formal significance testing, no variance over training seeds, and error bars explicitly described as only qualitative.",
+        "The study is small scale and synthetic: three 20x20 layouts from the same simulator, fixed task count, and narrow input representation. Generalization to unseen topologies or more realistic scheduling settings is not established.",
+        "Important ablations are missing, including sensitivity to the congestion penalty weight lambda, lookahead horizon, training-target generation, path estimator, and whether the learning component beats simple hand-crafted local density heuristics.",
+        "Several implementation details remain underspecified, such as how provisional assignments are generated for training targets, how the obstacle-aware path estimate is computed and tie-broken, and how throughput in tasks/minute is derived from 100-step episodes."
+    ],
+    "Originality": 2,
+    "Quality": 2,
+    "Clarity": 3,
+    "Significance": 2,
+    "Questions": [
+        "Please clarify whether the 30-epoch checkpoint was selected using the same layout/load configurations reported in the final results. If so, can you provide results with checkpoint selection on a truly held-out tuning set or via nested evaluation?",
+        "How are the provisional assignments used to generate the congestion training target obtained? Are they produced by the same greedy allocator, randomly, or by some oracle/other heuristic? This choice could materially affect the learned signal.",
+        "Please compare against stronger and simpler baselines: e.g., a non-learned local density or bottleneck penalty, an oracle using the true short-horizon congestion target at decision time, and a better assignment solver than greedy matching.",
+        "How sensitive are results to the penalty weight lambda, the 5-step lookahead horizon, and the path-estimation procedure used to accumulate congestion cost?",
+        "Can you report results over multiple training seeds and more evaluation episodes, together with formal uncertainty estimates or significance tests?",
+        "Why is the validation set dense-obstacle-only while deployment spans three layouts? Was this intentional, and what happens if validation matches the deployment mixture?",
+        "Could you provide a clearer specification of the path planner / path estimator used at assignment time and the exact definition of throughput conversion to tasks per minute?"
+    ],
+    "Limitations": [
+        "The authors do acknowledge several important limitations, especially that the current implementation is only a congestion-proxy pilot and not true conflict-memory learning from MAPF conflicts.",
+        "However, the paper should more explicitly discuss the risk of evaluation-set tuning due to selecting checkpoints by downstream utility on the same configurations used for reporting.",
+        "The paper should also discuss the limited external validity of the findings: all experiments are on small synthetic layouts from a single simulator, so the conclusions may not transfer to more realistic warehouse or robot-fleet settings.",
+        "A practical negative impact is that miscalibrated congestion feedback can degrade performance in exactly the low-load or easy settings where the baseline is already sufficient; in real deployments this could reduce efficiency or increase local crowding around choke points. Any deployment would need safeguards and fallback mechanisms."
+    ],
+    "Ethical Concerns": false,
+    "Soundness": 2,
+    "Presentation": 3,
+    "Contribution": 2,
+    "Overall": 3,
+    "Confidence": 4,
+    "Decision": "Reject"
+}
